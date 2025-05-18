@@ -35,6 +35,7 @@ class _RegisterPageState extends State<RegisterPage> {
         dialogType: DialogType.success,
         animType: AnimType.scale,
         title: response['message'],
+        dismissOnTouchOutside: false,
         desc: 'Selamat datang ${response['data']['name']} Anda berhasil register sebagai ${response['data']['level']}',
         btnOkOnPress: (){
           Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));

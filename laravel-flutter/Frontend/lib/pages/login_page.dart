@@ -35,6 +35,7 @@ class _LoginPageState extends State<LoginPage> {
         context: context,
         animType: AnimType.scale,
         dialogType: DialogType.success,
+        dismissOnTouchOutside: false,
         title: response['message'],
         desc: 'Selamat datang ${response['data']['name']} Anda sebagai ${response['data']['level']}',
         btnOkOnPress: (){
