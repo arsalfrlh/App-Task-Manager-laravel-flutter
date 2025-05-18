@@ -20,6 +20,14 @@ class _TambahPageState extends State<TambahPage> {
 
   void _tambah(BuildContext context)async{
     if(titleController.text.isNotEmpty && deskripsiController.text.isNotEmpty && statusController.text.isNotEmpty && gambar != null){
+      showDialog( //saat function _tambah di panggil akan menampilkan dialog loading
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
       final newTask = Task(
         id: 0,
         title: titleController.text,
@@ -27,18 +35,30 @@ class _TambahPageState extends State<TambahPage> {
         status: statusController.text,
       );
 
-      await apiService.addTask(newTask, gambar!).then((_){
-        AwesomeDialog(
+      final response = await apiService.addTask(newTask, gambar!); //response di proses
+      Navigator.of(context, rootNavigator: true).pop(); //saat proses response di class ApiService selesai akan menutup showDialog loading dan menampilkan Awesome dialog
+      if(response['success'] == true){
+      AwesomeDialog(
           context: context,
           animType: AnimType.scale,
           dialogType: DialogType.success,
-          title: 'Success',
+          title: response['message'],
           desc: 'Berhasil menambahkan Tugas Baru',
           btnOkOnPress: (){
             Navigator.pop(context);
           }
         ).show();
-      });
+      }else{
+      AwesomeDialog(
+          context: context,
+          animType: AnimType.scale,
+          dialogType: DialogType.error,
+          title: response['message'],
+          desc: response['data'].toString(),
+          btnOkOnPress: (){}
+        ).show();
+      }
+      
     }else{
       AwesomeDialog(
         context: context,

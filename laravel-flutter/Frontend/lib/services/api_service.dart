@@ -16,7 +16,7 @@ class ApiService {
     return json.decode(response.body);
   }
 
-  Future<Map<String, dynamic>> register(String name, String email, String password)async{
+  Future<Map<String, dynamic>> register(String name, String email, String password)async{ //data JSON berupa objek| karena beberapa data saja
     final response = await http.post(Uri.parse('$baseUrl/register'),
     headers: {'Content-Type': 'application/json'},
     body: json.encode({'name': name, 'email': email, 'password': password}));
@@ -43,14 +43,14 @@ class ApiService {
     final response = await http.get(Uri.parse('$baseUrl/tugas'),
         headers: {'Authorization': 'Bearer $token'});
     if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body)['data'];
+      final List<dynamic> data = json.decode(response.body)['data']; //data JSON berupa List| karena banyak
       return data.map((item) => Task.fromJson(item)).toList();
     } else {
       throw Exception('data gagal dimuat');
     }
   }
 
-  Future<void> updateStatus(Task task) async {
+  Future<void> updateStatus(Task task) async { //jika http post|put|delete|get hasilnya Future<http.Response> |jdi bisa digunakan langsung
     final key = await SharedPreferences.getInstance();
     final token = key.getString('token');
 
@@ -64,7 +64,7 @@ class ApiService {
     );
   }
 
-  Future<void> addTask(Task task, XFile gambar)async{
+  Future<Map<String, dynamic>> addTask(Task task, XFile gambar)async{ //jika http MultipartRequest|MultipartFile hasilnya Future<http.StreamedResponse> |jdi harus di konversi dlu (http.Response.fromStream(response))
     final key = await SharedPreferences.getInstance();
     final token = key.getString('token');
 
@@ -76,7 +76,38 @@ class ApiService {
     request.fields['deskripsi'] = task.deskripsi;
     request.fields['status'] = task.status;
     request.files.add(await http.MultipartFile.fromPath('gambar', gambar.path));
-    await request.send();
+    final response = await request.send(); //variable request di kirim dan di simpan di variabel response
+
+    if(response.statusCode == 200){
+      final responseData = await http.Response.fromStream(response); //hasil response tadi di konversi jadi json
+      return json.decode(responseData.body);
+    }else{
+      throw Exception('Tambah Task gagal');
+    }
+  }
+
+  Future<Map<String, dynamic>> editTask(Task task, XFile? gambar)async{
+    final key = await SharedPreferences.getInstance();
+    final token = key.getString('token');
+    
+    final request = await http.MultipartRequest('POST', Uri.parse('$baseUrl/tugas/edit'));
+    request.headers.addAll({'Authorization': 'Bearer $token'});
+    request.fields['id'] = task.id.toString();
+    request.fields['title'] = task.title;
+    request.fields['deskripsi'] = task.deskripsi;
+    request.fields['status'] = task.status;
+
+    if(gambar != null){
+      request.files.add(await http.MultipartFile.fromPath('gambar', gambar.path));
+    }
+
+    final response = await request.send();
+    if(response.statusCode == 200){
+      final responseData = await http.Response.fromStream(response);
+      return json.decode(responseData.body);
+    }else{
+      throw Exception('Edit Task gagal');
+    }
   }
 
   Future<dynamic> updateTask(Task task)async{

@@ -18,7 +18,13 @@ class _RegisterPageState extends State<RegisterPage> {
   final passwordController = TextEditingController();
 
   void _regitser(BuildContext context)async{
+    showDialog(
+      context: context,
+      barrierDismissible: false, 
+      builder: (context) => const Center(child: CircularProgressIndicator(),));
+
     final response = await apiService.register(nameController.text, emailController.text, passwordController.text);
+    Navigator.of(context, rootNavigator: true).pop();
     if(response['success'] == true){
       final key = await SharedPreferences.getInstance();
       await key.setString('token', response['data']['token']);
@@ -39,8 +45,8 @@ class _RegisterPageState extends State<RegisterPage> {
         context: context,
         animType: AnimType.scale,
         dialogType: DialogType.error,
-        title: 'Error',
-        desc: response['message'],
+        title: response['message'],
+        desc: response['data'].toString(),
         btnOkOnPress: (){},
       ).show();
     }

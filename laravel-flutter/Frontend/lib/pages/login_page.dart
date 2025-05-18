@@ -17,7 +17,15 @@ class _LoginPageState extends State<LoginPage> {
   final passwordController = TextEditingController();
 
   void _login(BuildContext context)async{
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator(),),
+    );
+
     final response = await apiService.login(emailController.text, passwordController.text);
+    Navigator.of(context, rootNavigator: true).pop();
+
     if(response['success'] == true){
       final key = await SharedPreferences.getInstance();
       await key.setString('token', response['data']['token']);

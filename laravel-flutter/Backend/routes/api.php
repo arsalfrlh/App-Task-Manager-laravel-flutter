@@ -12,6 +12,7 @@ Route::get('/user', function (Request $request) {
 Route::middleware('auth:sanctum')->group(function(){
     Route::get('/tugas',[TaskApiController::class,'index']);
     Route::post('/tugas/tambah',[TaskApiController::class,'create']);
+    Route::post('/tugas/edit',[TaskApiController::class,'edit']);
     Route::put('/tugas/update',[TaskApiController::class,'update']);
     Route::put('/tugas/update/status',[TaskApiController::class,'updateStatus']);
     Route::delete('/tugas/hapus/{id}',[TaskApiController::class,'destroy']);

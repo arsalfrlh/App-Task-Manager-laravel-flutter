@@ -38,7 +38,7 @@ class TaskApiController extends Controller
         ]);
 
         if($validator->fails()){
-            return response()->json(['message' => 'ada kesalahan', 'success' => false, 'data' => $validator->errors()]);
+            return response()->json(['message' => 'ada kesalahan', 'success' => false, 'data' => $validator->errors()->all()]);
         }
 
         if($request->hasFile('gambar')){
@@ -57,6 +57,41 @@ class TaskApiController extends Controller
         ]);
 
         return response()->json(['message' => 'Berhasil menambahkan Tugas baru', 'success' => true, 'data' => $data]);
+    }
+
+    public function edit(Request $request){
+        $validator = Validator::make($request->all(),[
+            'gambar' => 'image|mimes:jpg,jpeg,png|max:2048',
+            'title' => 'required',
+            'deskripsi' => 'required',
+            'status' => 'required',
+        ]);
+
+        if($validator->fails()){
+            return response()->json(['message' => 'ada kesalahan', 'success' => false, 'data' => $validator->errors()->all()]);
+        }
+
+        $task = Task::where('id',$request->id)->first();
+        if($request->hasFile('gambar')){
+            if($task->gambar && file_exists(public_path('images/'.$task->gambar))){
+                unlink(public_path('images/'.$task->gambar));
+            }
+
+            $gambar = $request->file('gambar');
+            $nmgambar = time() . '_' . $gambar->getClientOriginalName();
+            $gambar->move(public_path('images'),$nmgambar);
+        }else{
+            $nmgambar = $task->gambar;
+        }
+
+        $data = Task::where('id',$request->id)->update([
+            'gambar' => $nmgambar,
+            'title' => $request->title,
+            'deskripsi' => $request->deskripsi,
+            'status' => $request->status,
+        ]);
+
+        return response()->json(['message' => 'Task berhasil di update', 'success' => true, 'data' => $data]);
     }
 
     public function update(Request $request){

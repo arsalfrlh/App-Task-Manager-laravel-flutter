@@ -1,4 +1,5 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:task/models/task.dart';
@@ -111,7 +112,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _sendData(BuildContext context)async{
+    showDialog(
+      context: context,
+      barrierDismissible: false, 
+      builder: (context) => const Center(child: CircularProgressIndicator(),
+      )
+    );
+
     final response = await apiService.sendData();
+    Navigator.of(context, rootNavigator: true).pop();
     if(response['success'] == true){
       AwesomeDialog(
         context: context,
@@ -413,7 +422,7 @@ class ProductCard extends StatelessWidget {
                   color: const Color(0xFF979797).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Image.network('http://10.0.2.2:8000/images/${task.gambar}', errorBuilder: (context, error, stackTrace) => Icon(Icons.broken_image),),
+                child: CachedNetworkImage(imageUrl: 'http://10.0.2.2:8000/images/${task.gambar}', fit: BoxFit.cover, errorWidget:(context, url, error) => Icon(Icons.broken_image, size: 120,),), //import classnya cached_image_network
               ),
             ),
             const SizedBox(height: 8),

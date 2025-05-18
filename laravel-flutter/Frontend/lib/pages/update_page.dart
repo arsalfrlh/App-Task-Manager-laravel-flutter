@@ -1,4 +1,5 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:task/models/task.dart';
@@ -27,23 +28,37 @@ class _UpdatePageState extends State<UpdatePage> {
     statusController = TextEditingController(text: widget.task.status);
   }
 
+  void pilih()async{
+    gambar = await ImagePicker().pickImage(source: ImageSource.gallery);
+  }
+
   void _update(BuildContext context)async{
     if(titleController.text.isNotEmpty && deskripsiController.text.isNotEmpty && statusController.text.isNotEmpty){
-      final newTask = Task(
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context)  => const Center(
+          child: CircularProgressIndicator(),
+          ),
+        );
+
+      final udpateTask = Task(
         id: widget.task.id,
         title: titleController.text,
         deskripsi: deskripsiController.text,
         status: statusController.text,
       );
 
-      final response = await apiService.updateTask(newTask);
+      final response = await apiService.editTask(udpateTask, gambar);
+      Navigator.of(context, rootNavigator: true).pop();
+
       if(response['success'] == true){
         AwesomeDialog(
           context: context,
           animType: AnimType.scale,
           dialogType: DialogType.success,
-          title: 'Success',
-          desc: response['message'],
+          title: response['message'],
+          desc: 'Berhasil Mengupdate Task',
           btnOkOnPress: (){
             Navigator.pop(context);
           }
@@ -53,8 +68,8 @@ class _UpdatePageState extends State<UpdatePage> {
           context: context,
           animType: AnimType.scale,
           dialogType: DialogType.error,
-          title: 'Error',
-          desc: response['message'],
+          title: response['message'],
+          desc: response['data'].toString(),
           btnOkOnPress: (){}
         ).show();
       }
@@ -79,7 +94,7 @@ class _UpdatePageState extends State<UpdatePage> {
         elevation: 0,
         backgroundColor: const Color(0xFF00BF6D),
         foregroundColor: Colors.white,
-        title: const Text("Tambah Tugas"),
+        title: const Text("Update Tugas"),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -87,6 +102,7 @@ class _UpdatePageState extends State<UpdatePage> {
           children: [
             ProfilePic(
               image: 'http://10.0.2.2:8000/images/${widget.task.gambar}',
+              imageUploadBtnPress: pilih,
             ),
             const Divider(),
             Form(
@@ -209,12 +225,12 @@ class ProfilePic extends StatelessWidget {
     super.key,
     required this.image,
     this.isShowPhotoUpload = false,
-    this.imageUploadBtnPress,
+    required this.imageUploadBtnPress,
   });
 
   final String image;
   final bool isShowPhotoUpload;
-  final VoidCallback? imageUploadBtnPress;
+  final VoidCallback imageUploadBtnPress;
 
   @override
   Widget build(BuildContext context) {
@@ -231,10 +247,27 @@ class ProfilePic extends StatelessWidget {
       child: Stack(
         alignment: Alignment.bottomRight,
         children: [
-          CircleAvatar(
-            radius: 50,
-            backgroundImage: NetworkImage(image),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(50),
+            child: CachedNetworkImage(
+              imageUrl: 'http://10.0.2.2:8000/images/${image}', errorWidget: (context, url, error) => Icon(Icons.broken_image, size: 120,),
+              width: 120,
+              height: 120,
+              fit: BoxFit.cover,
+              )
           ),
+          InkWell(
+            onTap: imageUploadBtnPress,
+            child: CircleAvatar(
+              radius: 13,
+              backgroundColor: Theme.of(context).primaryColor,
+              child: const Icon(
+                Icons.add,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+          )
         ],
       ),
     );
